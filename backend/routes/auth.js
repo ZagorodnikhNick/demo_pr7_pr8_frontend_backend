@@ -76,7 +76,20 @@ router.post("/register", async (req, res) => {
 
   // 4) bcrypt.hash — это “солёный” хеш пароля.
   // 10 — cost factor (сколько “тяжело” считать хеш). Чем больше, тем медленнее, но безопаснее.
+  // Соль библиотека делает автоматически
+  //  $2b$10$KYVbZ5JFVfqu0oV98LnF5eTk4QTe2e4PQG7QNYfhumEpGdi/867AO
+  //  |--|--|----------------------|-------------------------------|
+  //  |  |           |                          |
+  //  |  |           |                          └─ итоговый хеш
+  //  |  |           └─ соль
+  //  |  └─ cost factor
+  //  └─ версия bcrypt
   const passwordHash = await bcrypt.hash(String(password), 10);
+  // 10 — cost factor; определяет, насколько вычисление хеша будет тяжёлым.
+  //	•	8 — быстрее;
+	//  •	10 — стандартно;
+	//  •	12 — медленнее;
+	//  •	14 — ещё тяжелее.
 
   // 5) Создаём пользователя (id — случайный)
   const user = {
@@ -157,7 +170,7 @@ router.post("/login", async (req, res) => {
   // 4) JWT — это токен, который клиент кладёт в заголовок:
   // Authorization: Bearer <token>
   //
-  // payload:
+  // payload (то что попадет в токен):
   // - sub (subject) = id пользователя
   // - email = для удобства
   //
@@ -167,6 +180,8 @@ router.post("/login", async (req, res) => {
     JWT_SECRET,
     { expiresIn: "15m" }
   );
+
+// JWT_SECRET - Это ключ подписи.
 
   return res.json({ accessToken });
 });
@@ -199,7 +214,7 @@ router.get("/me", authMiddleware, (req, res) => {
     });
   }
 
-  // Возвращаем “профиль”
+  // Возвращаем “профиль” 
   return res.json({
     id: user.id,
     email: user.email,
